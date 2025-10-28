@@ -4,9 +4,8 @@
 #include <iostream>
 #include <random>
 #include <algorithm>
-#include <Funkcijos.h>
-#include <Klases.h>
-
+#include "Funkcijos.h"
+#include "Klases.h"
 
 int main() {
     std::vector<User> users = generateUsers(10);
@@ -17,4 +16,13 @@ int main() {
     }
 
     return 0;
+
+    auto txs = generateTransactions(users, 20);
+    std::cout << "\n=== Generated Transactions ===\n";
+    for (const auto& tx : txs) {
+        std::cout << "Sender: " << tx.getSender()
+                  << " -> Receiver: " << tx.getReceiver()
+                  << " | Amount: " << tx.getAmount()
+                  << " | ID: " << tx.getID() << '\n';
+    }
 }
