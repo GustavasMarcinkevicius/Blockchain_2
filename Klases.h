@@ -3,6 +3,7 @@
 #include <vector>
 #include <ctime>
 #include <iostream>
+#include <iomanip>
 
 // ===== User class =====
 class User {
@@ -23,10 +24,14 @@ public:
     void changeBalance(long long amount) { balance += amount; }
 
     void print() const {
-        std::cout << "Name: " << name
-                  << " | Public Key: " << public_key
-                  << " | Balance: " << balance << '\n';
-    }
+    std::cout << std::left
+              << std::setw(20) << name
+              << std::setw(25) << public_key
+              << std::setw(15) << balance
+              << '\n';
+}
+
+
 };
 
 // ===== Transaction class =====
@@ -73,6 +78,9 @@ public:
     void mineBlock() {
         hash = "000fakehash"; //nepamirst pakeist
     }
+
+    void setHash(const std::string& h) { hash = h; }
+
 };
 
 // ===== Blockchain class =====
