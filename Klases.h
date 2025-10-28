@@ -81,6 +81,26 @@ public:
 
     void setHash(const std::string& h) { hash = h; }
 
+        void printBlockTransactions(int maxPrint = 10) const {
+        std::cout << std::left
+                  << std::setw(20) << "Sender"
+                  << std::setw(20) << "Receiver"
+                  << std::setw(15) << "Amount"
+                  << "Transaction ID" << '\n';
+        std::cout << std::string(75, '-') << '\n';
+
+        int printCount = std::min(maxPrint, (int)transactions.size());
+        for (int i = 0; i < printCount; ++i) {
+            const auto& tx = transactions[i];
+            std::cout << std::left
+                      << std::setw(20) << tx.getSender()
+                      << std::setw(20) << tx.getReceiver()
+                      << std::setw(15) << tx.getAmount()
+                      << tx.getID() 
+                      << '\n';
+        }
+    }
+
 };
 
 // ===== Blockchain class =====
@@ -96,9 +116,9 @@ public:
     }
 
     Block getLastBlock() const {
-        if (chain.empty()) {
-            throw std::runtime_error("Blockchain is empty!");
-        }
-        return chain.back();
+        if (!chain.empty()) return chain.back();
+        return Block(0, {}, "0");
     }
+
+    const std::vector<Block>& getChain() const { return chain; }
 };
