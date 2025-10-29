@@ -42,20 +42,6 @@ int main() {
 
 
 
-
-    
-    // //TRANSACTION FOR NEW BLOCK PRINT
-    // std::cout << "\n=== Transactions for New Block ===\n";
-    // std::cout << std::left << std::setw(20) << "Sender" << std::setw(20) << "Receiver" << "Amount" <<'\n';
-    // std::cout << "-----------------------------------------------------------------------------------" << '\n';
-    // count = 0;
-    // for (const auto& tx : blockTxs) {
-    //     if (count++ == 10) break;
-    //     std::cout << std::left << std::setw(20) << tx.getSender() << std::setw(20) << tx.getReceiver()
-    //             << tx.getAmount() << '\n';
-    // }
-    // std::cout << std::left << std::setw(20) << "..."  << std::setw(20) << "..." << "..." << '\n';
-
 Blockchain bc;
 
 std::cout << '\n';
@@ -98,9 +84,21 @@ while (!txs.empty()) {
     } while (blockHash.substr(0, difficulty) != std::string(difficulty, '0'));
 
 
-    // Create the block
+    // Create the block and actually do the transactions
     Block newBlock(bc.getChain().size() + 1, blockTxs, prevHash);
     newBlock.setHash(blockHash);
+    
+    for (const auto& tx : blockTxs) {
+    for (auto& user : users) {
+        if (user.getPublicKey() == tx.getSender()) {
+            user.setBalance(user.getBalance() - tx.getAmount());
+        }
+        if (user.getPublicKey() == tx.getReceiver()) {
+            user.setBalance(user.getBalance() + tx.getAmount());
+        }
+    }
+}
+
 
     // Add block to blockchain and remove transactions
     bc.addBlock(newBlock);
@@ -116,6 +114,20 @@ while (!txs.empty()) {
 
 std::cout << "Blockchain size: " << bc.getChain().size() << " block(s)" << '\n';
 std::cout << "Remaining transactions in pool: " << txs.size() << std::endl;
+
+
+bc[49].printBlockTransactions();
+
+    // print users after transactions
+    std::cout << "=== Users after Transactions ===\n";
+    std::cout << std::left << std::setw(20) << "Users"  << std::setw(25) << "Public Key" << "Balance" << '\n';
+    std::cout << "-----------------------------------------------------------------------------------" << '\n';
+    count = 0;
+    for (const auto& user : users) {
+        if (count++ == 10) break;
+        user.print();
+    }
+
 
 return 0;
 }

@@ -81,19 +81,16 @@ public:
     std::string getPrevHash() const { return prev_hash; }
     const std::vector<Transaction>& getTransactions() const { return transactions; }
 
-    void mineBlock() {
-        hash = "000fakehash"; //nepamirst pakeist
-    }
 
     void setHash(const std::string& h) { hash = h; }
 
-        void printBlockTransactions(int maxPrint = 10) const {
+        void printBlockTransactions(int maxPrint = 100) const {
         std::cout << std::left
                   << std::setw(20) << "Sender"
                   << std::setw(20) << "Receiver"
                   << std::setw(15) << "Amount"
                   << "Transaction ID" << '\n';
-        std::cout << std::string(75, '-') << '\n';
+        std::cout <<  "------------------------------------------------------------------------------------------------------------------------" << '\n';
 
         int printCount = std::min(maxPrint, (int)transactions.size());
         for (int i = 0; i < printCount; ++i) {
@@ -130,4 +127,11 @@ public:
     }
 
     const std::vector<Block>& getChain() const { return chain; }
+    Block& operator[](size_t index) {
+    return chain[index];
+    }
+
+    const Block& operator[](size_t index) const {
+    return chain[index];
+    }
 };
