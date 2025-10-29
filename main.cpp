@@ -32,7 +32,7 @@ int main() {
     //NEW TRANSACTIONS PRINT
     std::cout << "\n=== Generated Transactions ===\n";
     std::cout << std::left << std::setw(20) << "Sender" << std::setw(20) << "Receiver" << std::setw(20) << "Amount" << "TransactionID" << '\n';
-    std::cout << "-----------------------------------------------------------------------------------" << '\n';
+    std::cout << "----------------------------------------------------------------------------------------------------------------------------" << '\n';
     count = 0;
     for (const auto& tx : txs) {
         if (count++ == 10) break;
