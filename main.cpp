@@ -58,6 +58,10 @@ int main() {
 
 Blockchain bc;
 
+std::cout << '\n';
+std::cout << "\n=== Generated blocks ===\n";
+
+
 while (!txs.empty()) {
     int count = std::min(100, (int)txs.size());
     std::vector<Transaction> blockTxs(txs.begin(), txs.begin() + count);
@@ -103,11 +107,12 @@ while (!txs.empty()) {
     txs.erase(txs.begin(), txs.begin() + count);
 
     // Print info
-    std::cout << "Block #" << std::left << std::setw(12) << bc.getChain().size() 
+    std::cout << "Block #" << std::left << std::setw(6) << bc.getChain().size() 
               << " | Hash: " << newBlock.getHash() 
               << " | Prev Hash: " << newBlock.getPrevHash() 
               << " | Nonce: " << nonce-1 << '\n';
 }
+
 
 std::cout << "Blockchain size: " << bc.getChain().size() << " block(s)" << '\n';
 std::cout << "Remaining transactions in pool: " << txs.size() << std::endl;
