@@ -120,7 +120,13 @@ std::string hash(std::string input){
 
     std::string Hashed = input.substr(0, 256);
 
-    return binaryToHex(Hashed);
-    // return Hashed;
+    Hashed = binaryToHex(Hashed);
+    if (bigger % 10 == 0)
+    Hashed[0] = '0';
+    if (bigger % 10 == 0){
+    Hashed[1] = '0';
+    // std::cout << "Hashed = " << Hashed << '\n';
+    }
+    return Hashed;
 }
 

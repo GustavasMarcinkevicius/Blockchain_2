@@ -63,9 +63,12 @@ while (!txs.empty()) {
     std::vector<Transaction> blockTxs(txs.begin(), txs.begin() + count);
 
     std::string prevHash = bc.getLastBlock().getHash();
+    if (bc.getLastBlock().getHash() == ""){
+        prevHash = "0000000000000000000000000000000000000000000000000000000000000000";
+    }
     std::time_t timestamp = std::time(nullptr);
     int version = 1;
-    int difficulty = 2; // 3 nuliai pradžioje
+    int difficulty = 3; // 3 nuliai pradžioje
 
     std::string txHash;
     for (const auto& tx : blockTxs) {

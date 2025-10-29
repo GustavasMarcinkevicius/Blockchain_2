@@ -47,7 +47,8 @@ public:
     Transaction(const std::string& s, const std::string& r, long long a)
         : sender(s), receiver(r), amount(a) {
 
-        transaction_id = s + r + std::to_string(a);
+        transaction_id = hash(s + r + std::to_string(a));
+
 
         // std::string transaction_id_unhashed = s + r + std::to_string(a);
         // transaction_id = hash(transaction_id_unhashed);
