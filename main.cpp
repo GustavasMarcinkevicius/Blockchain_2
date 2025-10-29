@@ -7,6 +7,7 @@
 #include "Funkcijos.h"
 #include "Klases.h"
 #include <iomanip>
+#include "Hash.h"
 
 int main() {
     std::vector<User> users = generateUsers(1000);
@@ -60,16 +61,49 @@ Blockchain bc;
 while (!txs.empty()) {
     int count = std::min(100, (int)txs.size());
     std::vector<Transaction> blockTxs(txs.begin(), txs.begin() + count);
-    std::string prevHash = bc.getLastBlock().getHash();
-    Block newBlock(bc.getChain().size() + 1, blockTxs, prevHash);
-    newBlock.setHash("000fakehash"); 
 
+    std::string prevHash = bc.getLastBlock().getHash();
+    std::time_t timestamp = std::time(nullptr);
+    int version = 1;
+    int difficulty = 2; // 3 nuliai pradžioje
+
+    std::string txHash;
+    for (const auto& tx : blockTxs) {
+        txHash += tx.getID();
+    }
+    txHash = hash(txHash);
+
+    // Proof-of-Work
+    long long nonce = 0;
+    std::string blockHash;
+    do {
+        std::string header = prevHash + std::to_string(timestamp) + std::to_string(version)
+                             + txHash + std::to_string(nonce) + std::to_string(difficulty);
+        header = hash(header);
+        // std::cout << "header = " << header << '\n';
+        blockHash = hash(header);
+        nonce++;
+        // std::cout << "nonce = " << nonce << '\n';
+        // if (nonce > 10000){
+        //     std::cout <<blockHash<< '\n';
+        // }
+
+    } while (blockHash.substr(0, difficulty) != std::string(difficulty, '0'));
+
+
+    // Create the block
+    Block newBlock(bc.getChain().size() + 1, blockTxs, prevHash);
+    newBlock.setHash(blockHash);
+
+    // Add block to blockchain and remove transactions
     bc.addBlock(newBlock);
     txs.erase(txs.begin(), txs.begin() + count);
 
-    std::cout << " | Hash: " << newBlock.getHash()   << " | Prev Hash: " << newBlock.getPrevHash() << " ===\n";
-
-    // newBlock.printBlockTransactions();
+    // Print info
+    std::cout << "Block #" << std::left << std::setw(12) << bc.getChain().size() 
+              << " | Hash: " << newBlock.getHash() 
+              << " | Prev Hash: " << newBlock.getPrevHash() 
+              << " | Nonce: " << nonce-1 << '\n';
 }
 
 std::cout << "Blockchain size: " << bc.getChain().size() << " block(s)" << '\n';

@@ -4,6 +4,7 @@
 #include <ctime>
 #include <iostream>
 #include <iomanip>
+#include "Hash.h"
 
 // ===== User class =====
 class User {
@@ -45,7 +46,11 @@ private:
 public:
     Transaction(const std::string& s, const std::string& r, long long a)
         : sender(s), receiver(r), amount(a) {
-        transaction_id = s + r + std::to_string(a); // vėliau galima pakeisti į hash
+
+        transaction_id = s + r + std::to_string(a);
+
+        // std::string transaction_id_unhashed = s + r + std::to_string(a);
+        // transaction_id = hash(transaction_id_unhashed);
     }
 
     std::string getSender() const { return sender; }
@@ -100,6 +105,9 @@ public:
                       << '\n';
         }
     }
+
+    void setNonce(long long n) { nonce = n; }
+    long long getNonce() const { return nonce; }
 
 };
 
