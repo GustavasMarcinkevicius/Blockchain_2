@@ -103,46 +103,47 @@ std::string computeMerkleRoot(const std::vector<Transaction>& transactions) {
 }
 
 std::vector<Transaction> filterValidTransactions(
-    const std::vector<Transaction>& blockTxs,
-    const std::vector<User>& users
+    std::vector<Transaction>& blockTxs, 
+    std::vector<User>& users
 ) {
     std::unordered_map<std::string, long long> balances;
 
-
-    //Sukuriu laikinas balansu kopijas, kad zmogus, turintis 1000, negaletu issiusti kelis kartus po 999
     for (const auto& user : users) {
         balances[user.getPublicKey()] = user.getBalance();
     }
 
     std::vector<Transaction> validTxs;
 
-    for (const auto& tx : blockTxs) {
-        if (tx.getSender() == tx.getReceiver()) continue; 
+    for (auto it = blockTxs.begin(); it != blockTxs.end();) {
+        const auto& tx = *it;
+        if (tx.getSender() == tx.getReceiver()) {
+            it = blockTxs.erase(it);
+            continue;
+        }
 
-        //ID tikrinimas (neturetu sufeilint)
         std::string txInfo = tx.getSender() + tx.getReceiver() + std::to_string(tx.getAmount());
         if (tx.getID() != hash(txInfo)) {
-        std::cout << "Invalid transaction ID, sender: " << tx.getSender() << '\n';
-        continue;
+            std::cout << "Invalid transaction ID, sender: " << tx.getSender() << '\n';
+            it = blockTxs.erase(it);
+            continue;
         }
+
         long long senderBalance = balances[tx.getSender()];
 
         if (senderBalance >= tx.getAmount()) {
             validTxs.push_back(tx);
-
             balances[tx.getSender()] -= tx.getAmount();
             balances[tx.getReceiver()] += tx.getAmount();
-        }
-        else {
-            std::cout << "Transaction amount is bigger than the senders balance" << '\n';
-                        txPool.erase(std::remove_if(txPool.begin(), txPool.end(),
-                        [&](const Transaction& t){ return t.getID() == tx.getID(); }),
-                        txPool.end());
+            ++it;
+        } else {
+            std::cout << "Transaction amount is bigger than the sender's balance, removing\n";
+            it = blockTxs.erase(it); 
         }
     }
 
     return validTxs;
 }
+
 
 //bloko kasimas laiku
 bool tryMineBlock(Block& block, const std::string& prevHash, const std::string& merkleRoot, int difficulty, int timeLimitMs = 5000) {
