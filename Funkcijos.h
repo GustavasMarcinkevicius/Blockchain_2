@@ -104,32 +104,37 @@ std::string computeMerkleRoot(const std::vector<Transaction>& transactions) {
 
 std::vector<Transaction> filterValidTransactions(
     std::vector<Transaction>& blockTxs, 
-    std::vector<User>& users
+    std::vector<User>& users,
+    std::vector<Transaction>& txPool
 ) {
     std::unordered_map<std::string, long long> balances;
 
-    for (const auto& user : users) {
+    for (const auto& user : users)
         balances[user.getPublicKey()] = user.getBalance();
-    }
 
     std::vector<Transaction> validTxs;
 
     for (auto it = blockTxs.begin(); it != blockTxs.end();) {
         const auto& tx = *it;
         if (tx.getSender() == tx.getReceiver()) {
+            txPool.erase(std::remove_if(txPool.begin(), txPool.end(),
+                                        [&](const Transaction& t){ return t.getID() == tx.getID(); }),
+                         txPool.end());
             it = blockTxs.erase(it);
             continue;
         }
 
         std::string txInfo = tx.getSender() + tx.getReceiver() + std::to_string(tx.getAmount());
         if (tx.getID() != hash(txInfo)) {
-            std::cout << "Invalid transaction ID, sender: " << tx.getSender() << '\n';
+            std::cout << "Invalid transaction ID, sender: " << tx.getSender() << ", removing\n";
+            txPool.erase(std::remove_if(txPool.begin(), txPool.end(),
+                                        [&](const Transaction& t){ return t.getID() == tx.getID(); }),
+                         txPool.end());
             it = blockTxs.erase(it);
             continue;
         }
 
         long long senderBalance = balances[tx.getSender()];
-
         if (senderBalance >= tx.getAmount()) {
             validTxs.push_back(tx);
             balances[tx.getSender()] -= tx.getAmount();
@@ -137,12 +142,16 @@ std::vector<Transaction> filterValidTransactions(
             ++it;
         } else {
             std::cout << "Transaction amount is bigger than the sender's balance, removing\n";
-            it = blockTxs.erase(it); 
+            txPool.erase(std::remove_if(txPool.begin(), txPool.end(),
+                                        [&](const Transaction& t){ return t.getID() == tx.getID(); }),
+                         txPool.end());
+            it = blockTxs.erase(it);
         }
     }
 
     return validTxs;
 }
+
 
 
 //bloko kasimas laiku
@@ -176,41 +185,48 @@ bool tryMineBlock(Block& block, const std::string& prevHash, const std::string& 
 void mineCandidateBlocks(Blockchain& bc, std::vector<Transaction>& txs, std::vector<User>& users, int timeLimitMs, int difficulty = 3) {
     int candidateCount = 5;
     int txPerBlock = 100;
+    bool ValidTransactions = true;
 
     while (!txs.empty()) {
         bool minedAny = false;
 
         for (int i = 0; i < candidateCount && !txs.empty(); ++i) {
-            std::vector<Transaction> blockTxs = pickRandomTransactions(txs, txPerBlock);
-            blockTxs = filterValidTransactions(blockTxs, users);
-            if (blockTxs.empty()) {
-            std::cout << "No valid transactions left for this block, skipping...\n";
-            minedAny = false;
-            break; 
-            }
-            std::string merkleRoot = computeMerkleRoot(blockTxs);
-            std::string prevHash = bc.getLastBlock().getHash();
-            if (prevHash.empty()) prevHash = std::string(64, '0');
-
-            Block candidate(bc.getChain().size() + 1, blockTxs, prevHash);
-
-            if (tryMineBlock(candidate, prevHash, merkleRoot, difficulty, timeLimitMs)) {
-                processBlockTransactions(blockTxs, users);
-                bc.addBlock(candidate);
-
-                for (const auto& tx : blockTxs) {
-                    txs.erase(std::remove_if(txs.begin(), txs.end(),
-                                [&](const Transaction& t){ return t.getID() == tx.getID(); }),
-                              txs.end());
-                }
-
-                minedAny = true;
-                std::cout << "Mined Block #" << bc.getChain().size()
-                          << " | Nonce: " << candidate.getNonce()
-                          << " | Remaining transactions: " << txs.size() << "\n";
-                break; 
-            }
+    std::vector<Transaction> blockTxs = pickRandomTransactions(txs, txPerBlock);
+    std::vector<Transaction> validTxs = filterValidTransactions(blockTxs, users, txs);
+    if (validTxs.empty()) {
+        for (const auto& tx : blockTxs) {
+            txs.erase(std::remove_if(txs.begin(), txs.end(),
+                                     [&](const Transaction& t){ return t.getID() == tx.getID(); }),
+                      txs.end());
         }
+        std::cout << "No valid transactions left for this block, skipping...\n";
+        continue; 
+    }
+
+    std::string merkleRoot = computeMerkleRoot(validTxs);
+    std::string prevHash = bc.getLastBlock().getHash();
+    if (prevHash.empty()) prevHash = std::string(64, '0');
+
+    Block candidate(bc.getChain().size() + 1, validTxs, prevHash);
+
+    if (tryMineBlock(candidate, prevHash, merkleRoot, difficulty, timeLimitMs)) {
+        processBlockTransactions(validTxs, users);
+        bc.addBlock(candidate);
+
+        for (const auto& tx : validTxs) {
+            txs.erase(std::remove_if(txs.begin(), txs.end(),
+                                     [&](const Transaction& t){ return t.getID() == tx.getID(); }),
+                      txs.end());
+        }
+
+        minedAny = true;
+        std::cout << "Mined Block #" << bc.getChain().size()
+                  << " | Nonce: " << candidate.getNonce()
+                  << " | Remaining transactions: " << txs.size() << "\n";
+        break; 
+    }
+}
+
 
         if (!minedAny) {
             std::cout << "No blocks mined this round. Increasing time limit...\n";
