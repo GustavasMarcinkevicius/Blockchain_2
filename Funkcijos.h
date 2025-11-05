@@ -8,7 +8,7 @@
 std::vector<User> generateUsers(int n) {
     std::vector<User> users;
     std::mt19937_64 rng(std::random_device{}());
-    std::uniform_int_distribution<long long> balanceDist(100, 1'000'000);
+    std::uniform_int_distribution<long long> balanceDist(100, 1000000);
 
     for (int i = 0; i < n; ++i) {
         std::string name = "User" + std::to_string(i + 1);
@@ -97,4 +97,42 @@ std::string computeMerkleRoot(const std::vector<Transaction>& transactions) {
     }
 
     return layer[0];
+}
+
+
+#include <unordered_map>
+#include <vector>
+#include <string>
+
+std::vector<Transaction> filterValidTransactions(
+    const std::vector<Transaction>& blockTxs,
+    const std::vector<User>& users
+) {
+    std::unordered_map<std::string, long long> balances;
+
+
+    //Sukuriu laikinas balansu kopijas, kad zmogus, turintis 1000, negaletu issiusti kelis kartus po 999
+    for (const auto& user : users) {
+        balances[user.getPublicKey()] = user.getBalance();
+    }
+
+    std::vector<Transaction> validTxs;
+
+    for (const auto& tx : blockTxs) {
+        if (tx.getSender() == tx.getReceiver()) continue; 
+
+        long long senderBalance = balances[tx.getSender()];
+
+        if (senderBalance >= tx.getAmount()) {
+            validTxs.push_back(tx);
+
+            balances[tx.getSender()] -= tx.getAmount();
+            balances[tx.getReceiver()] += tx.getAmount();
+        }
+        else {
+            std::cout << "Transaction amount is bigger than the senders balance" << '\n';
+        }
+    }
+
+    return validTxs;
 }

@@ -52,6 +52,8 @@ while (!txs.empty()) {
     int count = std::min(100, (int)txs.size());
     std::vector<Transaction> blockTxs(txs.begin(), txs.begin() + count);
 
+    blockTxs = filterValidTransactions(blockTxs, users);
+
     std::string prevHash = bc.getLastBlock().getHash();
     if (bc.getLastBlock().getHash() == ""){
         prevHash = "0000000000000000000000000000000000000000000000000000000000000000";
