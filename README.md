@@ -76,5 +76,7 @@
 
 
 AI naudojimas:
-AI naudotas ReadME generavimui, minimaliems klausimams/debuginimui
+AI naudotas ReadME generavimui, minimaliems klausimams/debuginimui, pirminis užduoties "reviewas":
+<img width="999" height="521" alt="image" src="https://github.com/user-attachments/assets/669c233a-f762-4b82-8780-fb323ffe6e02" />
+
 
