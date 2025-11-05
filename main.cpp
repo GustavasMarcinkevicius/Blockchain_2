@@ -60,18 +60,14 @@ while (!txs.empty()) {
     int version = 1;
     int difficulty = 3; // 3 nuliai pradžioje
 
-    std::string txHash;
-    for (const auto& tx : blockTxs) {
-        txHash += tx.getID();
-    }
-    txHash = hash(txHash);
+    std::string merkleRoot = computeMerkleRoot(blockTxs);
 
     // Proof-of-Work
     long long nonce = 0;
     std::string blockHash;
     do {
         std::string header = prevHash + std::to_string(timestamp) + std::to_string(version)
-                             + txHash + std::to_string(nonce) + std::to_string(difficulty);
+                             + merkleRoot + std::to_string(nonce) + std::to_string(difficulty);
         header = hash(header);
         // std::cout << "header = " << header << '\n';
         blockHash = hash(header);
@@ -87,17 +83,7 @@ while (!txs.empty()) {
     // Create the block and actually do the transactions
     Block newBlock(bc.getChain().size() + 1, blockTxs, prevHash);
     newBlock.setHash(blockHash);
-    
-    for (const auto& tx : blockTxs) {
-    for (auto& user : users) {
-        if (user.getPublicKey() == tx.getSender()) {
-            user.setBalance(user.getBalance() - tx.getAmount());
-        }
-        if (user.getPublicKey() == tx.getReceiver()) {
-            user.setBalance(user.getBalance() + tx.getAmount());
-        }
-    }
-}
+    processBlockTransactions(blockTxs, users);
 
 
     // Add block to blockchain and remove transactions

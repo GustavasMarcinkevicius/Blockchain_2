@@ -60,3 +60,41 @@ std::vector<Transaction> pickRandomTransactions(const std::vector<Transaction>& 
 
     return selected;
 }
+
+void processBlockTransactions(const std::vector<Transaction>& blockTxs, std::vector<User>& users) {
+    for (const auto& tx : blockTxs) {
+        for (auto& user : users) {
+            if (user.getPublicKey() == tx.getSender()) {
+                user.setBalance(user.getBalance() - tx.getAmount());
+            }
+            if (user.getPublicKey() == tx.getReceiver()) {
+                user.setBalance(user.getBalance() + tx.getAmount());
+            }
+        }
+    }
+}
+
+std::string computeMerkleRoot(const std::vector<Transaction>& transactions) {
+    if (transactions.empty()) return "";
+
+    std::vector<std::string> layer;
+    for (const auto& tx : transactions) {
+        layer.push_back(hash(tx.getID()));  
+    }
+
+    while (layer.size() > 1) {
+        std::vector<std::string> nextLayer;
+
+        for (size_t i = 0; i < layer.size(); i += 2) {
+            if (i + 1 < layer.size()) {
+                nextLayer.push_back(hash(layer[i] + layer[i+1]));
+            } else {
+                nextLayer.push_back(hash(layer[i] + layer[i]));
+            }
+        }
+
+        layer = nextLayer;  
+    }
+
+    return layer[0];
+}

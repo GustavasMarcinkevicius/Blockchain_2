@@ -69,6 +69,7 @@ private:
     long long nonce;
     int difficulty;
     std::string hash;
+    std::string merkleRoot;
     std::time_t timestamp;
 
 public:
