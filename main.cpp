@@ -49,7 +49,7 @@ int main() {
 
     std::cout << "Blockchain size: " << bc.getChain().size() << " block(s)" << '\n';
     std::cout << "Remaining transactions in pool: " << txs.size() << '\n';
-    std::cout << '\n'
+    std::cout << '\n';
     printBlockInfo(bc[49]);
 
     return 0;
