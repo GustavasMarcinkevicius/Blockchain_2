@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <algorithm>
 #include "Klases.h"
+#include <unordered_map>
 
 std::vector<User> generateUsers(int n) {
     std::vector<User> users;
@@ -99,11 +100,6 @@ std::string computeMerkleRoot(const std::vector<Transaction>& transactions) {
     return layer[0];
 }
 
-
-#include <unordered_map>
-#include <vector>
-#include <string>
-
 std::vector<Transaction> filterValidTransactions(
     const std::vector<Transaction>& blockTxs,
     const std::vector<User>& users
@@ -121,6 +117,12 @@ std::vector<Transaction> filterValidTransactions(
     for (const auto& tx : blockTxs) {
         if (tx.getSender() == tx.getReceiver()) continue; 
 
+        //ID tikrinimas (neturetu sufeilint)
+        std::string txInfo = tx.getSender() + tx.getReceiver() + std::to_string(tx.getAmount());
+        if (tx.getID() != hash(txInfo)) {
+        std::cout << "Invalid transaction ID, sender: " << tx.getSender() << '\n';
+        continue;
+        }
         long long senderBalance = balances[tx.getSender()];
 
         if (senderBalance >= tx.getAmount()) {
@@ -133,6 +135,9 @@ std::vector<Transaction> filterValidTransactions(
             std::cout << "Transaction amount is bigger than the senders balance" << '\n';
         }
     }
+
+
+    
 
     return validTxs;
 }
