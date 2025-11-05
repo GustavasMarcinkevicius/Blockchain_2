@@ -7,6 +7,19 @@
 #include <unordered_map>
 #include <chrono>
 
+void printBlockInfo(const Block& block) {
+    std::cout << "Hash: " << block.getHash() << '\n';
+    std::cout << "Previous Hash: " << block.getPrevHash() << '\n';
+    std::cout << "Merkle Root: " << block.getMerkleRoot() << '\n';
+    std::cout << "Nonce: " << block.getNonce() << '\n';
+    std::cout << "Timestamp: " << block.getTimestamp() << '\n'; 
+    std::cout << "Difficulty: " << block.getDifficulty() << '\n';
+    std::cout << "Number of transactions: " << block.getTransactions().size() << '\n';
+    std::cout << "\nTransactions:\n";
+    block.printBlockTransactions(); 
+    std::cout << "===============================\n\n";
+}
+
 
 std::vector<User> generateUsers(int n) {
     std::vector<User> users;
@@ -207,7 +220,8 @@ void mineCandidateBlocks(Blockchain& bc, std::vector<Transaction>& txs, std::vec
     std::string prevHash = bc.getLastBlock().getHash();
     if (prevHash.empty()) prevHash = std::string(64, '0');
 
-    Block candidate(bc.getChain().size() + 1, validTxs, prevHash);
+    Block candidate(validTxs, prevHash);
+    candidate.setMerkleRoot(merkleRoot);
 
     if (tryMineBlock(candidate, prevHash, merkleRoot, difficulty, timeLimitMs)) {
         processBlockTransactions(validTxs, users);
@@ -220,9 +234,10 @@ void mineCandidateBlocks(Blockchain& bc, std::vector<Transaction>& txs, std::vec
         }
 
         minedAny = true;
-        std::cout << "Mined Block #" << bc.getChain().size()
-                  << " | Nonce: " << candidate.getNonce()
+        std::cout << "Mined Block #"  << std::left << std::setw(10) << bc.getChain().size() 
+                  << " | Nonce: " <<std::left << std::setw(15) << candidate.getNonce()
                   << " | Remaining transactions: " << txs.size() << "\n";
+
         break; 
     }
 }

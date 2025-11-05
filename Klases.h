@@ -49,9 +49,6 @@ public:
 
         transaction_id = hash(s + r + std::to_string(a));
 
-
-        // std::string transaction_id_unhashed = s + r + std::to_string(a);
-        // transaction_id = hash(transaction_id_unhashed);
     }
 
     std::string getSender() const { return sender; }
@@ -63,7 +60,6 @@ public:
 // ===== Block class =====
 class Block {
 private:
-    int index;
     std::vector<Transaction> transactions;
     std::string prev_hash;
     long long nonce;
@@ -74,25 +70,34 @@ private:
     std::string version;
 
 public:
-    Block(int idx, const std::vector<Transaction>& txs, const std::string& prevHash, int diff = 3)
-        : index(idx), transactions(txs), prev_hash(prevHash), difficulty(diff), nonce(0) {
+    Block(const std::vector<Transaction>& txs, const std::string& prevHash, int diff = 3)
+        : transactions(txs), prev_hash(prevHash), difficulty(diff), nonce(0) {
         timestamp = std::time(nullptr);
     }
 
-    std::string getHash() const { return hash; }
-    std::string getPrevHash() const { return prev_hash; }
+    // Getters
     const std::vector<Transaction>& getTransactions() const { return transactions; }
+    std::string getPrevHash() const { return prev_hash; }
+    long long getNonce() const { return nonce; }
+    int getDifficulty() const { return difficulty; }
+    std::string getHash() const { return hash; }
+    std::string getMerkleRoot() const { return merkleRoot; }
+    std::time_t getTimestamp() const { return timestamp; }
+    std::string getVersion() const { return version; }
 
-
+    // Setters
     void setHash(const std::string& h) { hash = h; }
+    void setMerkleRoot(const std::string& root) { merkleRoot = root; }
+    void setNonce(long long n) { nonce = n; }
+    void setVersion(const std::string& v) { version = v; }
 
-        void printBlockTransactions(int maxPrint = 100) const {
+    void printBlockTransactions(int maxPrint = 100) const {
         std::cout << std::left
                   << std::setw(20) << "Sender"
                   << std::setw(20) << "Receiver"
                   << std::setw(15) << "Amount"
                   << "Transaction ID" << '\n';
-        std::cout <<  "------------------------------------------------------------------------------------------------------------------------" << '\n';
+        std::cout << "------------------------------------------------------------------------------------------------------------------------" << '\n';
 
         int printCount = std::min(maxPrint, (int)transactions.size());
         for (int i = 0; i < printCount; ++i) {
@@ -105,14 +110,8 @@ public:
                       << '\n';
         }
     }
-
-    void setNonce(long long n) { nonce = n; }
-    long long getNonce() const { return nonce; }
-    std::time_t getTimestamp() const {return timestamp; }
-    std::string getVersion() const {return version; }
-
-
 };
+
 
 // ===== Blockchain class =====
 class Blockchain {
@@ -128,7 +127,7 @@ public:
 
     Block getLastBlock() const {
         if (!chain.empty()) return chain.back();
-        return Block(0, {}, "0");
+        return Block({}, "0"); 
     }
 
     const std::vector<Block>& getChain() const { return chain; }
