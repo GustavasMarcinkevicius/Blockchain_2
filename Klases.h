@@ -71,6 +71,7 @@ private:
     std::string hash;
     std::string merkleRoot;
     std::time_t timestamp;
+    std::string version;
 
 public:
     Block(int idx, const std::vector<Transaction>& txs, const std::string& prevHash, int diff = 3)
@@ -107,6 +108,9 @@ public:
 
     void setNonce(long long n) { nonce = n; }
     long long getNonce() const { return nonce; }
+    std::time_t getTimestamp() const {return timestamp; }
+    std::string getVersion() const {return version; }
+
 
 };
 

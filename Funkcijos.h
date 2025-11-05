@@ -5,6 +5,8 @@
 #include <algorithm>
 #include "Klases.h"
 #include <unordered_map>
+#include <chrono>
+
 
 std::vector<User> generateUsers(int n) {
     std::vector<User> users;
@@ -133,11 +135,86 @@ std::vector<Transaction> filterValidTransactions(
         }
         else {
             std::cout << "Transaction amount is bigger than the senders balance" << '\n';
+                        txPool.erase(std::remove_if(txPool.begin(), txPool.end(),
+                        [&](const Transaction& t){ return t.getID() == tx.getID(); }),
+                        txPool.end());
         }
     }
 
-
-    
-
     return validTxs;
 }
+
+//bloko kasimas laiku
+bool tryMineBlock(Block& block, const std::string& prevHash, const std::string& merkleRoot, int difficulty, int timeLimitMs = 5000) {
+    auto start = std::chrono::steady_clock::now();
+    long long nonce = 0;
+
+    while (true) {
+        std::string header = prevHash + std::to_string(block.getTimestamp()) +
+                             merkleRoot + std::to_string(nonce) + std::to_string(difficulty);
+        std::string blockHash = hash(hash(header));
+
+        if (blockHash.substr(0, difficulty) == std::string(difficulty, '0')) {
+            block.setHash(blockHash);
+            block.setNonce(nonce);
+            return true;
+        }
+
+        nonce++;
+
+        auto now = std::chrono::steady_clock::now();
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() >= timeLimitMs) {
+            std::cout << "Time limit reached\n";
+            return false;
+        }
+    }
+}
+
+
+// Pagrindinis kasimo procesas
+void mineCandidateBlocks(Blockchain& bc, std::vector<Transaction>& txs, std::vector<User>& users, int timeLimitMs, int difficulty = 3) {
+    int candidateCount = 5;
+    int txPerBlock = 100;
+
+    while (!txs.empty()) {
+        bool minedAny = false;
+
+        for (int i = 0; i < candidateCount && !txs.empty(); ++i) {
+            std::vector<Transaction> blockTxs = pickRandomTransactions(txs, txPerBlock);
+            blockTxs = filterValidTransactions(blockTxs, users);
+            if (blockTxs.empty()) {
+            std::cout << "No valid transactions left for this block, skipping...\n";
+            minedAny = false;
+            break; 
+            }
+            std::string merkleRoot = computeMerkleRoot(blockTxs);
+            std::string prevHash = bc.getLastBlock().getHash();
+            if (prevHash.empty()) prevHash = std::string(64, '0');
+
+            Block candidate(bc.getChain().size() + 1, blockTxs, prevHash);
+
+            if (tryMineBlock(candidate, prevHash, merkleRoot, difficulty, timeLimitMs)) {
+                processBlockTransactions(blockTxs, users);
+                bc.addBlock(candidate);
+
+                for (const auto& tx : blockTxs) {
+                    txs.erase(std::remove_if(txs.begin(), txs.end(),
+                                [&](const Transaction& t){ return t.getID() == tx.getID(); }),
+                              txs.end());
+                }
+
+                minedAny = true;
+                std::cout << "Mined Block #" << bc.getChain().size()
+                          << " | Nonce: " << candidate.getNonce()
+                          << " | Remaining transactions: " << txs.size() << "\n";
+                break; 
+            }
+        }
+
+        if (!minedAny) {
+            std::cout << "No blocks mined this round. Increasing time limit...\n";
+            timeLimitMs *= 2;
+        }
+    }
+}
+
